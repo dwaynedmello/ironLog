@@ -85,14 +85,17 @@
   .rest-chip:active{border-color:var(--gold);color:var(--gold)}
   .rest-pill{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(14px);z-index:55;
     display:none;align-items:center;gap:12px;background:var(--raised2);border:1px solid var(--gold-line);
-    border-radius:14px;padding:10px 12px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:.25s}
+    border-radius:14px;padding:10px 12px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;
+    max-width:calc(100vw - 20px);box-sizing:border-box}
   .rest-pill.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
-  .rest-pill .rlab{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--faint);line-height:1}
+  .rest-pill .rlab{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--faint);line-height:1;white-space:nowrap}
+  .rest-pill .rlab.awake{color:var(--gold)}
+  .rest-pill .rlab.over{color:var(--pr)}
   .rest-pill .rt{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--gold);line-height:1.1}
   .rest-pill .rt.done{color:var(--pr)}
   .rest-pill button{background:var(--surface);border:1px solid var(--line);color:var(--ink);font-family:var(--body);
     font-weight:600;font-size:12px;padding:8px 11px;border-radius:9px;cursor:pointer}
-  .rest-pill .exn{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted)}
+  .rest-pill .exn{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted)}
   .ex-target{text-align:right;flex:0 0 auto}
   .ex-scheme{font-family:var(--mono);font-weight:700;font-size:15px}
   .badge{display:inline-block;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;font-weight:700;
@@ -228,7 +231,7 @@
 </div>
 
 <div class="rest-pill" id="restpill">
-  <div><div class="rlab">Rest</div><div class="rt" id="rt">0:00</div></div>
+  <div><div class="rlab" id="rlab">Rest</div><div class="rt" id="rt">0:00</div></div>
   <div class="exn" id="restexn"></div>
   <button id="rest30">+30s</button>
   <button id="restskip">Skip</button>
@@ -542,6 +545,8 @@ function renderGuide(){
         <div class="d">45–75s</div><div class="w">Isolation (curls, raises, calves, pushdowns, face pulls, core)</div>
       </div>
       <p style="margin-top:9px">Longer rest on heavy sets isn't lazy — full recovery lets you move more weight, which is the whole point. Rushing strength sets just makes them cardio. Supersets (like the arm finisher) go back-to-back, then rest.</p>
+      <p style="margin-top:9px">While a rest timer is running the pill reads <b>REST · SCREEN ON</b> and the phone is held awake, so the three-pip alarm always fires. That needs iOS 18.4 or newer; on anything older the label just reads <b>REST</b> and the screen will sleep as usual.</p>
+      <p style="margin-top:9px">The clock is anchored to real time, so locking the phone, switching apps or even relaunching IRONLOG will not throw it off. Leave the app and iOS freezes it, alarm included; come back and it either shows the true time left or sounds straight away and tells you how long ago it finished. There is no way around that on an iPhone web app without a server pushing the alert.</p>
     </div>
 
     <div class="g">
@@ -633,32 +638,228 @@ document.querySelectorAll('#unittoggle button').forEach(b=> b.onclick=async()=>{
 document.getElementById("savebtn").onclick=saveWorkout;
 document.getElementById("clearbtn").onclick=()=>{ renderDay(); toast("Cleared"); };
 
-/* Rest timer */
-let restLeft=0, restInt=null;
-const rtEl=document.getElementById("rt"), pill=document.getElementById("restpill"), rexn=document.getElementById("restexn");
-function paintRest(){
-  rtEl.textContent = restLeft>0 ? mmss(restLeft) : "GO";
-  rtEl.classList.toggle("done", restLeft<=0);
+/* ---------------------------------------------------------------
+   Rest timer
+   Anchored to wall clock, not to a tick count, so it stays correct
+   through backgrounding, screen lock, reload and app relaunch.
+   Holds a screen wake lock while resting so the phone does not sleep
+   and the alarm actually fires. iOS suspends JS and audio for a
+   home screen web app the moment you leave it, so the wake lock is
+   what makes the beep reliable; if you do leave, the timer catches
+   up and sounds on return.
+------------------------------------------------------------------ */
+const RKEY = "ironlog-rest-v1";
+const STALE_MS = 30*60*1000;   // a timer older than this is forgotten, not resumed
+const CATCHUP_MS = 60*1000;    // only sound a late alarm if it expired within this window
+const HOLD_MS = 8000;          // how long the pill stays up after the alarm
+
+let restEndsAt = 0, restName = "", restAlarmed = false, restAlarmAt = 0, restTick = null;
+
+const rtEl  = document.getElementById("rt"),
+      pill  = document.getElementById("restpill"),
+      rexn  = document.getElementById("restexn"),
+      rlab  = document.getElementById("rlab");
+
+const restLeftSec = () => restEndsAt ? Math.max(0, Math.ceil((restEndsAt - Date.now())/1000)) : 0;
+const restOverSec = () => restEndsAt ? Math.max(0, Math.floor((Date.now() - restEndsAt)/1000)) : 0;
+
+/* --- audio ------------------------------------------------------ */
+let ac = null, schedNodes = [], schedAt = Infinity;
+
+function ensureAudio(){
+  try{
+    if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state === "suspended") ac.resume().catch(()=>{});
+  }catch(e){ ac = null; }
+  return ac;
 }
-function startRest(sec, name){
-  restLeft=sec; rexn.textContent=name||""; pill.classList.add("show"); paintRest();
-  clearInterval(restInt);
-  restInt=setInterval(()=>{
-    restLeft--; paintRest();
-    if(restLeft<=0){ clearInterval(restInt); beep(); setTimeout(()=>pill.classList.remove("show"),2500); }
-  },1000);
-}
-document.getElementById("rest30").onclick=()=>{ restLeft+=30; if(!restInt||restLeft>0){ paintRest(); if(!document.querySelector('#restpill.show')) pill.classList.add('show'); } };
-document.getElementById("restskip").onclick=()=>{ clearInterval(restInt); restLeft=0; pill.classList.remove("show"); };
-let ac;
-function beep(){
-  try{ ac=ac||new (window.AudioContext||window.webkitAudioContext)();
-    [0,0.18].forEach(t=>{ const o=ac.createOscillator(); const g=ac.createGain();
-      o.type="sine"; o.frequency.value=880; o.connect(g); g.connect(ac.destination);
-      g.gain.setValueAtTime(0.001,ac.currentTime+t); g.gain.exponentialRampToValueAtTime(0.25,ac.currentTime+t+0.02);
-      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+t+0.14); o.start(ac.currentTime+t); o.stop(ac.currentTime+t+0.16); });
+/* iOS only allows audio after a gesture. Unlock on the first touch and
+   keep re-resuming on later ones, since iOS suspends the context on blur. */
+function primeAudio(){
+  const c = ensureAudio(); if(!c) return;
+  try{
+    const s = c.createBufferSource();
+    s.buffer = c.createBuffer(1, 1, c.sampleRate);
+    s.connect(c.destination); s.start(0);
   }catch(e){}
 }
+document.addEventListener("touchend", primeAudio, {passive:true});
+document.addEventListener("click", primeAudio, {passive:true});
+
+function clearSchedule(){
+  schedNodes.forEach(n=>{ try{ n.stop(); }catch(e){} try{ n.disconnect(); }catch(e){} });
+  schedNodes = []; schedAt = Infinity;
+}
+/* Three pips, last one higher so it reads as "done" across gym noise. */
+function buildBeep(c, at){
+  schedAt = at;
+  [[0,880],[0.18,880],[0.36,1320]].forEach(([t,f])=>{
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = "sine"; o.frequency.value = f; o.connect(g); g.connect(c.destination);
+    const s = at + t;
+    g.gain.setValueAtTime(0.0001, s);
+    g.gain.exponentialRampToValueAtTime(0.35, s+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, s+0.15);
+    o.start(s); o.stop(s+0.17);
+    schedNodes.push(o);
+  });
+}
+/* Did the queued pips already play? If so the tick must not restart them,
+   or it would cut the pattern off partway through. */
+function alarmAlreadySounded(){
+  return schedNodes.length > 0 && ac && ac.state === "running" && ac.currentTime >= schedAt;
+}
+/* Queued in the audio engine when rest starts, so the pips land on time
+   even if the JS tick is late. Rescheduled whenever we come back to the app. */
+function scheduleAlarm(inSec){
+  const c = ensureAudio(); if(!c) return;
+  clearSchedule();
+  buildBeep(c, c.currentTime + Math.max(0, inSec));
+}
+function fireAlarm(){
+  clearSchedule();
+  const c = ensureAudio();
+  if(!c || c.state !== "running") return false;   // audio still locked, retry on next tick
+  buildBeep(c, c.currentTime + 0.02);
+  try{ if(navigator.vibrate) navigator.vibrate([120,80,120]); }catch(e){}  // no-op on iOS
+  return true;
+}
+
+/* --- screen wake lock ------------------------------------------- */
+let wakeLock = null, wakeOn = false, wakePending = false;
+
+async function requestWake(){
+  if(!("wakeLock" in navigator) || wakeLock || wakePending) return;
+  if(document.visibilityState !== "visible") return;
+  wakePending = true;
+  try{
+    const l = await navigator.wakeLock.request("screen");
+    /* rest may have ended while the request was in flight */
+    if(!restEndsAt || document.visibilityState !== "visible"){ try{ l.release(); }catch(e){} return; }
+    wakeLock = l; wakeOn = true;
+    l.addEventListener("release", ()=>{ wakeOn = false; wakeLock = null; });
+  }catch(e){ wakeOn = false; wakeLock = null; }   /* older iOS, or lock refused */
+  finally{ wakePending = false; }
+}
+function releaseWake(){
+  wakeOn = false;
+  if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock = null; }
+}
+
+/* --- persistence ------------------------------------------------ */
+function restSave(){
+  try{
+    if(restEndsAt) localStorage.setItem(RKEY, JSON.stringify({endsAt:restEndsAt, name:restName, alarmed:restAlarmed}));
+    else localStorage.removeItem(RKEY);
+  }catch(e){}
+}
+function restLoad(){
+  let v = null;
+  try{ v = JSON.parse(localStorage.getItem(RKEY) || "null"); }catch(e){}
+  if(!v || !v.endsAt) return;
+  if(Date.now() - v.endsAt > STALE_MS){ try{ localStorage.removeItem(RKEY); }catch(e){} return; }
+  restEndsAt = v.endsAt; restName = v.name || ""; restAlarmed = !!v.alarmed;
+  restAlarmAt = restAlarmed ? Date.now() : 0;
+  rexn.textContent = restName;
+  pill.classList.add("show");
+  paintRest();
+  if(restLeftSec() > 0){ requestWake(); scheduleAlarm(restLeftSec()); }
+  startTick();
+}
+
+/* --- render ----------------------------------------------------- */
+function paintRest(){
+  if(!restEndsAt) return;
+  const left = restLeftSec();
+  if(left > 0){
+    rtEl.textContent = mmss(left);
+    rtEl.classList.remove("done");
+    rlab.textContent = wakeOn ? "Rest · screen on" : "Rest";
+    rlab.classList.toggle("awake", wakeOn);
+    rlab.classList.remove("over");
+  }else{
+    const over = restOverSec();
+    rtEl.textContent = "GO";
+    rtEl.classList.add("done");
+    rlab.textContent = over > 3 ? "Done " + mmss(over) + " ago" : "Rest";
+    rlab.classList.remove("awake");
+    rlab.classList.toggle("over", over > 3);
+  }
+}
+
+/* --- control ---------------------------------------------------- */
+function markAlarmed(){
+  restAlarmed = true; restAlarmAt = Date.now(); restSave(); releaseWake();
+}
+function startTick(){
+  clearInterval(restTick);
+  restTick = setInterval(tickRest, 250);   // 250ms so the display snaps back fast on return
+}
+/* Single decision point for "should the alarm sound now", shared by the tick
+   and by coming back to the app, so the two can never double-fire. */
+function maybeAlarm(){
+  if(!restEndsAt || restAlarmed || restLeftSec() > 0) return;
+  if(alarmAlreadySounded()){ markAlarmed(); return; }        // audio engine got there first
+  if(restOverSec()*1000 > CATCHUP_MS){ markAlarmed(); return; }  // too late to be a signal
+  if(fireAlarm()) markAlarmed();                             // else audio is still locked, retry next tick
+}
+function tickRest(){
+  if(!restEndsAt){ clearInterval(restTick); restTick = null; return; }
+  paintRest();
+  maybeAlarm();
+  if(restAlarmAt && Date.now() - restAlarmAt > HOLD_MS) endRest();
+}
+function startRest(sec, name){
+  restEndsAt = Date.now() + sec*1000;
+  restName = name || "";
+  restAlarmed = false; restAlarmAt = 0;
+  rexn.textContent = restName;
+  pill.classList.add("show");
+  restSave();
+  primeAudio();
+  scheduleAlarm(sec);
+  requestWake();
+  paintRest();
+  startTick();
+}
+function addRest(sec){
+  if(!restEndsAt) return;
+  restEndsAt = Math.max(Date.now(), restEndsAt) + sec*1000;
+  restAlarmed = false; restAlarmAt = 0;
+  restSave();
+  scheduleAlarm((restEndsAt - Date.now())/1000);
+  requestWake();
+  paintRest();
+  startTick();
+}
+function endRest(){
+  clearInterval(restTick); restTick = null;
+  clearSchedule(); releaseWake();
+  restEndsAt = 0; restName = ""; restAlarmed = false; restAlarmAt = 0;
+  restSave();
+  pill.classList.remove("show");
+  rlab.classList.remove("awake","over");
+}
+
+document.getElementById("rest30").onclick  = ()=>{ primeAudio(); addRest(30); };
+document.getElementById("restskip").onclick = endRest;
+
+/* Coming back to the app: reclaim the wake lock, requeue the alarm against
+   the real remaining time, and sound it now if it ran out while we were away. */
+function resumeRest(){
+  if(document.visibilityState !== "visible" || !restEndsAt) return;
+  const left = restLeftSec();
+  if(left > 0){
+    requestWake();
+    scheduleAlarm(left);   // requeue against the real remaining time
+  }else{
+    maybeAlarm();
+  }
+  paintRest();
+  startTick();
+}
+document.addEventListener("visibilitychange", resumeRest);
+window.addEventListener("pageshow", resumeRest);
 
 let toastTimer;
 function toast(msg){
@@ -671,6 +872,7 @@ function toast(msg){
   await loadDB();
   document.querySelectorAll('#unittoggle button').forEach(x=>x.setAttribute("aria-selected", x.dataset.unit===DB.unit?"true":"false"));
   renderDays(); renderDay();
+  restLoad();
 })();
 
 /* Offline: cache the app so it runs with no signal */
