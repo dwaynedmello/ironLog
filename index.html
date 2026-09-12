@@ -248,20 +248,25 @@ const PLAN={
     cardio:"The sled is the hard work. Nothing extra after this one.",
     ex:[
       {id:"sled",   name:"Sled Push",                sets:6, reps:20,type:"strength", inc:KG_INC.heavy, repLabel:"Metres",
-        cue:"6 x 20m, hard but not grinding. Log the load and the distance. Cover all six at 20m and add weight next time."},
-      {id:"squat",  name:"Back Squat",              sets:4, reps:4, type:"strength", inc:KG_INC.heavy, cue:"Heavy, but drive up fast. Leave one in the tank."},
+        cue:"6 x 20m, hard but not grinding. Log the load and the distance. Cover all six at 20m and add weight next time. Busy? Do the leg press below for 5 sets instead and take the sled next week."},
+      {id:"legpress",name:"Leg Press",              sets:4, reps:6, type:"strength", inc:KG_INC.heavy,
+        cue:"Heavy, but drive out fast. Controlled down, no bouncing off the bottom, knees tracking over the toes. Backup: hack squat."},
       {id:"bulgarian",name:"Bulgarian Split Squat", sets:3, reps:8, type:"build",    inc:KG_INC.iso,   cue:"8 per leg. Football is played on one leg at a time."},
       {id:"nordic", name:"Nordic Hamstring Curl",   sets:3, reps:5, type:"strength", inc:0,            cue:"Lower as slowly as you can, catch yourself. Best hamstring insurance there is."},
       {id:"copen",  name:"Copenhagen Adduction",    sets:3, reps:8, type:"build",    inc:0,            cue:"8 per side. Start on the knee-supported version. Clear it with your physio before you restart these."},
-      {id:"calf1",  name:"Standing Calf Raise",     sets:3, reps:12,type:"build",    inc:KG_INC.iso,   cue:"Stiff ankles are free speed. Full stretch, pause at the top."},
+      {id:"calf1",  name:"Standing Calf Raise",     sets:3, reps:12,type:"build",    inc:KG_INC.iso,   cue:"Stiff ankles are free speed. Full stretch, pause at the top. Standing machine, or a step with a dumbbell."},
     ]},
   strength:{ title:"Strength", focus:"Chest · Back · Shoulders · Anti-rotation",
     cardio:"Optional: 10 min easy bike to flush the legs. Nothing hard.",
     ex:[
-      {id:"bench",  name:"Barbell Bench Press",   sets:4, reps:5, type:"strength", inc:KG_INC.mid,  cue:"Top set of 5 — beat it or add reps."},
-      {id:"pullup", name:"Weighted Pull-up / Pulldown",sets:4,reps:6,type:"strength",inc:KG_INC.iso,cue:"Full hang to chin over bar."},
-      {id:"ohp",    name:"Overhead Press",        sets:3, reps:6, type:"strength", inc:KG_INC.mid,  cue:"Strict, brace the core."},
-      {id:"row",    name:"Barbell Row",           sets:3, reps:8, type:"build",    inc:KG_INC.mid,  cue:"Flat back, pull to belly."},
+      {id:"chestpress",name:"Chest Press",        sets:4, reps:6, type:"strength", inc:KG_INC.mid,
+        cue:"Set the seat so the handles sit at mid-chest. Full stretch back, drive to lockout. Backup: incline chest press or barbell bench."},
+      {id:"pulldown",name:"Lat Pulldown",         sets:4, reps:8, type:"strength", inc:KG_INC.iso,
+        cue:"Pull to the collarbone, elbows down not back. No leaning away. Backup: assisted pull-up machine."},
+      {id:"shpress",name:"Shoulder Press",        sets:3, reps:8, type:"strength", inc:KG_INC.mid,
+        cue:"Seat high enough that the handles start at ear height. Backup: DB shoulder press."},
+      {id:"cablerow",name:"Seated Cable Row",     sets:3, reps:10,type:"build",    inc:KG_INC.iso,
+        cue:"Chest tall, pull to the belly, squeeze and control it back. Backup: chest-supported row machine."},
       {id:"facepull",name:"Face Pull",            sets:3, reps:15,type:"build",    inc:KG_INC.iso,  cue:"Shoulder health — high elbows."},
       {id:"pallof", name:"Pallof Press",          sets:3, reps:12,type:"build",    inc:KG_INC.iso,  cue:"12 per side. Resist the twist — this is what stops you getting turned."},
     ]},
@@ -270,8 +275,10 @@ const PLAN={
     ex:[
       {id:"rsa",    name:"Runner Intervals",      sets:2, reps:5, type:"strength", inc:0, unit:"m", unitLabel:"Metres per rep",
         cue:"Curved treadmill. 15s hard, 45s easy, 5 reps a block, 3 min between blocks. Log the metres on your best rep. Air bike or rower if the runner is busy."},
-      {id:"rdl",    name:"Romanian Deadlift",     sets:3, reps:8, type:"build",    inc:KG_INC.heavy,cue:"Hinge, feel the hamstrings. Not a squat."},
-      {id:"hipthrust",name:"Hip Thrust",          sets:3, reps:10,type:"build",    inc:KG_INC.heavy,cue:"Glutes — full lockout. Sprint power comes from here."},
+      {id:"legcurl",name:"Lying Leg Curl",        sets:3, reps:10,type:"build",    inc:KG_INC.iso,
+        cue:"Slow on the way back, three seconds. Want the hinge pattern too? Add a 45-degree back extension holding a plate, 2 x 12."},
+      {id:"hipthrust",name:"Hip Thrust",          sets:3, reps:10,type:"build",    inc:KG_INC.heavy,
+        cue:"Glute drive machine if they have one, barbell on a bench if not. Full lockout. Sprint power comes from here."},
       {id:"nordic", name:"Nordic Hamstring Curl", sets:3, reps:5, type:"strength", inc:0,           cue:"Second dose this week. Same slow lower."},
       {id:"copen",  name:"Copenhagen Adduction",  sets:3, reps:8, type:"build",    inc:0,           cue:"Second dose. Groins take the load in every cut and every stretched pass."},
       {id:"legraise",name:"Hanging Leg Raise",    sets:3, reps:12,type:"build",    inc:0,           cue:"Core — no swinging."},
@@ -280,10 +287,12 @@ const PLAN={
     cardio:"Nothing extra. Save your legs for the pitch.",
     ex:[
       {id:"boxjump",name:"Box Jump / Broad Jump", sets:4, reps:3, type:"strength", inc:0,           cue:"Land soft and quiet. Stop the moment they stop feeling springy."},
-      {id:"frontsq",name:"Front Squat",           sets:3, reps:6, type:"strength", inc:KG_INC.mid,  cue:"Elbows high, upright. Moderate — this is not a second max-out day."},
-      {id:"incdb",  name:"Incline DB Press",      sets:3, reps:10,type:"build",    inc:KG_INC.iso,  cue:"Stretch at the bottom."},
+      {id:"hacksq", name:"Hack Squat",            sets:3, reps:8, type:"strength", inc:KG_INC.mid,
+        cue:"Moderate. This is not a second heavy day. Backup: single-leg leg press, 8 per leg."},
+      {id:"incdb",  name:"Incline Chest Press",   sets:3, reps:10,type:"build",    inc:KG_INC.iso,
+        cue:"Stretch at the bottom. Machine or dumbbells, whichever is free."},
       {id:"csrow",  name:"Chest-Supported Row",   sets:3, reps:10,type:"build",    inc:KG_INC.iso,  cue:"Strict, no torso english."},
-      {id:"dip",    name:"Weighted Dip",          sets:3, reps:8, type:"build",    inc:KG_INC.iso,  cue:"Lean forward for chest."},
+      {id:"dip",    name:"Weighted Dip",          sets:3, reps:8, type:"build",    inc:KG_INC.iso,  cue:"Lean forward for chest. Assisted dip machine is fine, just keep the assistance consistent."},
       {id:"cablecrunch",name:"Cable Crunch",      sets:3, reps:15,type:"build",    inc:KG_INC.iso,  cue:"Crunch with abs, not arms."},
     ]},
   pitch:{ title:"Pitch", focus:"Monday · your one running day",
@@ -295,10 +304,10 @@ const PLAN={
 };
 const DAY_ORDER=["speed","strength","engine","power","pitch"];
 const exById={}; DAY_ORDER.forEach(d=>PLAN[d].ex.forEach(e=>exById[e.id]=e));
-const REST={ sled:150,sprint:180,squat:210,bulgarian:120,nordic:120,copen:60,calf1:60,
-  bench:180,pullup:150,ohp:180,row:120,facepull:45,pallof:45,
-  rsa:180,rdl:150,hipthrust:120,legraise:60,
-  boxjump:120,frontsq:180,incdb:120,csrow:120,dip:120,cablecrunch:60 };
+const REST={ sled:150,sprint:180,legpress:180,bulgarian:120,nordic:120,copen:60,calf1:60,
+  chestpress:150,pulldown:120,shpress:120,cablerow:120,facepull:45,pallof:45,
+  rsa:180,legcurl:90,hipthrust:120,legraise:60,
+  boxjump:120,hacksq:180,incdb:120,csrow:120,dip:120,cablecrunch:60 };
 /* nordic and copen appear on two days as separate objects: stamp every one,
    not just the copy that happened to win in exById. */
 DAY_ORDER.forEach(d=> PLAN[d].ex.forEach(e=> e.rest = REST[e.id]||90));
@@ -548,6 +557,14 @@ function renderGuide(){
     </div>
 
     <div class="g">
+      <h3><span class="ico">◆</span> Machines, and where they stop working</h3>
+      <p>The big lifts are machines now because the free weight area at Holmes Place is always busy, and a session you skip because someone is camped on the only rack is worth nothing. Every machine slot names a <b>backup</b> in its cue, so there is always a second option and you are never stood waiting.</p>
+      <p><b>Pick one variant per slot and stay with it.</b> A leg press and a back squat, or a machine chest press and a barbell bench, move completely different numbers. Alternating between them turns your log into noise and the <b>▲ Try</b> nudge into a lie. If you do have to use the backup, treat that session as a maintenance session and pick the progression back up next time.</p>
+      <p><b>What machines cost you.</b> They hold you in a fixed path, seated, on both legs at once. That is most of what a footballer has to do without: balancing, bracing, and producing force off one leg. Which is exactly why the <b>Bulgarian split squats, Nordics, Copenhagens, calf raises, jumps and sprints did not change</b>. Those are the football half of the plan and they were never the reason you were queueing.</p>
+      <p>Your old barbell numbers have not gone anywhere. Bench, back squat, front squat, overhead press, barbell row, RDL and pull-ups all still have their history in the <b>Progress</b> tab, so if you ever go back to them you pick up where you left off.</p>
+    </div>
+
+    <div class="g">
       <h3><span class="ico">◆</span> Why this plan looks like this</h3>
       <p>You said four things: you gas out late, you are not quick enough, you get bullied off the ball, and you keep tweaking things. Those pull in different directions, so the plan handles them in priority order rather than all at once.</p>
       <p><b>1. Stop getting injured.</b> Nothing else matters if you are not on the pitch. Two exercises carry most of the evidence here, and both are in the plan twice a week:</p>
@@ -572,7 +589,7 @@ function renderGuide(){
     <div class="g">
       <h3><span class="ico">◆</span> How you get stronger</h3>
       <p><b>Double progression.</b> Hit the top rep target for <b>every set</b> of an exercise? Add weight next time — the app's <b>▲ Try</b> nudge tells you exactly when and how much (2.5${U()} upper body, 5${U()} lower). Otherwise, keep the weight and chase more reps.</p>
-      <p>The <b>strength</b> lifts (bench, squat, OHP, front squat, pull-ups) are your money movers — push those hard in the 4–6 rep range. <b>Build</b> lifts are 8–15 reps, one rep from failure.</p>
+      <p>The <b>strength</b> lifts (leg press, chest press, lat pulldown, shoulder press, hack squat) are your money movers — push those hard in the 6–8 rep range. Machines are safer to take close to failure than a loaded barbell, so leave about one rep in the tank rather than two. <b>Build</b> lifts are 8–15 reps.</p>
       <p><b>Not everything progresses by adding weight.</b> Sprints, intervals, jumps, Nordics and Copenhagens show <b>Match / beat last</b> instead of a <b>▲ Try</b> nudge, because they progress on quality, reps and speed. For sprints and the runner intervals the first box is <b>metres</b>, not weight, and they are left out of the session tonnage.</p>
       <p>The <b>sled is the exception</b> and the one place double progression still works on a running-adjacent lift: log the load and the metres, cover all six sets at 20m, and it will tell you to add weight.</p>
       <p><b>Tempo:</b> lower under control (~2 sec), no bouncing, small pause, then drive up. The last 1–2 reps of every working set should be genuinely hard — leave about 1 rep in the tank on build work, 1–2 on strength work.</p>
@@ -610,9 +627,9 @@ function renderGuide(){
       <p>The <b>⏱ chip</b> on every exercise shows its rest, and the timer auto-starts when you complete a set. Rule of thumb:</p>
       <div class="sched" style="grid-template-columns:auto 1fr">
         <div class="d">3m+</div><div class="w">Sprints, sled sets and interval blocks — full recovery, or it stops being speed work</div>
-        <div class="d">3–3.5m</div><div class="w">Squat top sets</div>
-        <div class="d">2–3m</div><div class="w">Bench, OHP, front squat, pull-ups (strength)</div>
-        <div class="d">90–120s</div><div class="w">Compound build work (rows, presses, RDL, hip thrust, dips), Nordics, jumps</div>
+        <div class="d">3m</div><div class="w">Leg press and hack squat top sets</div>
+        <div class="d">2–2.5m</div><div class="w">Chest press, lat pulldown, shoulder press (strength)</div>
+        <div class="d">90–120s</div><div class="w">Rows, incline press, hip thrust, dips, split squats, Nordics, jumps</div>
         <div class="d">45–75s</div><div class="w">Isolation and prehab (calves, face pulls, Pallof, Copenhagens, core)</div>
       </div>
       <p style="margin-top:9px">Longer rest on heavy sets isn't lazy — full recovery lets you move more weight, which is the whole point. On sprints it matters even more: the entire point is running fast, and a tired sprint trains the wrong thing while carrying most of the injury risk.</p>
