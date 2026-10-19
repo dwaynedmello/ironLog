@@ -1,5 +1,5 @@
 /* IRONLOG offline cache */
-const CACHE = 'ironlog-v9';
+const CACHE = 'ironlog-v10';
 const ASSETS = ['./', './index.html'];
 const NET_TIMEOUT = 2500;   // gym wifi gets one shot, then we serve from cache
 
