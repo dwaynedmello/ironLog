@@ -1,6 +1,6 @@
 /* IRONLOG offline cache */
-const CACHE = 'ironlog-v10';
-const ASSETS = ['./', './index.html'];
+const CACHE = 'ironlog-v11';
+const ASSETS = ['./', './index.html', './food.html'];
 const NET_TIMEOUT = 2500;   // gym wifi gets one shot, then we serve from cache
 
 self.addEventListener('install', e => {

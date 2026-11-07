@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0E1114">
+<title>IRONLOG — Food</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E1114'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='%23FFC12B' font-family='sans-serif' font-weight='bold'%3EF%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0E1114; --surface:#171B20; --raised:#1F242B; --raised2:#262C35;
+    --line:#2B323B; --ink:#F1F3F5; --muted:#939BA6; --faint:#6C7480;
+    --gold:#FFC12B; --gold-dim:rgba(255,193,43,.13); --gold-line:rgba(255,193,43,.35);
+    --pr:#46D07F; --pr-dim:rgba(70,208,127,.13);
+    --disp:-apple-system,system-ui,"Helvetica Neue",Arial,sans-serif;
+    --body:-apple-system,system-ui,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,"Roboto Mono",monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+    font-size:15px;line-height:1.5;padding-bottom:40px;
+    padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  .wrap{max-width:640px;margin:0 auto;padding:0 14px}
+  header{position:sticky;top:0;z-index:20;background:rgba(14,17,20,.96);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+    padding-top:env(safe-area-inset-top)}
+  h1{font-family:var(--disp);font-weight:800;font-size:26px;letter-spacing:-.5px;margin:12px 0 2px}
+  h1 b{color:var(--gold)}
+  .tag{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .tag b{color:var(--pr)}
+  .tabs{display:flex;gap:8px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:0 0 auto;background:var(--raised);border:1px solid var(--line);color:var(--muted);
+    font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.5px;text-transform:uppercase;
+    padding:9px 18px;border-radius:999px;cursor:pointer}
+  .tabs button[aria-selected="true"]{background:var(--gold);border-color:var(--gold);color:#17120A}
+  section{display:none;padding-top:16px}
+  section.on{display:block}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:14px;margin-bottom:12px}
+  .card h2{font-family:var(--disp);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--gold);margin:0 0 10px}
+  .card h3{font-family:var(--disp);font-size:16px;margin:14px 0 6px}
+  .card h3:first-of-type{margin-top:0}
+  p{margin:0 0 9px;color:var(--muted)}
+  p b,li b{color:var(--ink)}
+  ul{margin:0 0 9px;padding-left:18px;color:var(--muted)}
+  li{margin-bottom:5px}
+  .meta{font-size:12px;color:var(--faint)}
+
+  /* shopping list */
+  .item{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+  .item:last-child{border-bottom:0}
+  .box{flex:0 0 auto;width:24px;height:24px;border:2px solid var(--line);border-radius:7px;
+    display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent}
+  .item.done .box{background:var(--pr);border-color:var(--pr);color:#0E1114}
+  .item.done .nm{text-decoration:line-through;color:var(--faint)}
+  .nm{flex:1;font-weight:600}
+  .qty{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--gold);white-space:nowrap}
+  .item.done .qty{color:var(--faint)}
+  .btn{width:100%;background:var(--raised2);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.5px;text-transform:uppercase;
+    padding:12px;border-radius:11px;cursor:pointer;margin-top:4px}
+  .btn:active{border-color:var(--gold)}
+  .prog{font-family:var(--mono);font-size:12px;color:var(--faint);text-align:center;margin:8px 0 0}
+
+  /* meal tables */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);
+    font-weight:600;padding:0 0 7px;border-bottom:1px solid var(--line)}
+  th:last-child,td:last-child{text-align:right}
+  td{padding:9px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+  tr:last-child td{border-bottom:0}
+  td.w{font-family:var(--mono);font-weight:700;color:var(--gold);white-space:nowrap}
+  .tot{display:flex;justify-content:space-between;align-items:baseline;
+    background:var(--raised);border-radius:10px;padding:10px 12px;margin-top:10px}
+  .tot .k{font-family:var(--mono);font-weight:700;font-size:19px;color:var(--gold)}
+  .tot .m{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .day{background:var(--gold-dim);border:1px solid var(--gold-line)}
+  .day .k{font-size:22px}
+  .warn{background:var(--pr-dim);border:1px solid rgba(70,208,127,.35);border-radius:10px;
+    padding:10px 12px;margin-top:10px;font-size:13px;color:var(--ink)}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>IRON<b>LOG</b></h1>
+  <div class="tag">Food · <b>2,128 kcal · 169 g protein</b></div>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-s="shop">Shop</button>
+    <button role="tab" aria-selected="false" data-s="day">Day</button>
+    <button role="tab" aria-selected="false" data-s="cook">Cook</button>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+<!-- ================= SHOP ================= -->
+<section id="shop" class="on">
+  <div class="card">
+    <h2>Weekly shop · Kaufland</h2>
+    <p class="meta">Tap to tick. The list remembers itself, so you can close the page mid-aisle.</p>
+    <div id="list"></div>
+    <div class="prog" id="prog"></div>
+    <button class="btn" id="reset">Start a new shop</button>
+  </div>
+  <div class="card">
+    <h2>Budget</h2>
+    <p><b>€45 to €60 a week</b>, about €6.50 to €8.50 a day. Chicken is roughly half of it, so that is the only line worth touching if the number needs to come down.</p>
+    <p class="meta">Prices are crowd-reported estimates, not your branch's shelf. Write down what you actually pay on the first shop.</p>
+  </div>
+  <div class="card">
+    <h2>Buying notes</h2>
+    <ul>
+      <li><b>Broccoli frozen, not fresh.</b> Cheaper, no trimming waste, no spoilage, freezer to microwave. Nutritionally a wash.</li>
+      <li><b>Chicken: plain fillets.</b> The own-brand ones are often sold <i>leicht gewürzt</i>, pre-seasoned. You want unseasoned.</li>
+      <li><b>Magerquark, not Greek yogurt.</b> German <i>griechischer Joghurt</i> is ~10% fat. Magerquark is 13.5 g protein per 100 g and cheaper. Skyr works too.</li>
+      <li><b>Not Naturjoghurt.</b> Only 5.8 g protein per 100 g. It would cost you ~9 g of protein a day.</li>
+      <li><b>Oil lasts 3 to 4 weeks</b>, so it is not a weekly buy.</li>
+      <li>20 eggs buys 14 used plus 6 spare. 6 chicken trays gives 200 g spare.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= DAY ================= -->
+<section id="day">
+  <div class="card">
+    <h2>Breakfast</h2>
+    <table>
+      <tr><th>Food</th><th>Raw / dry</th></tr>
+      <tr><td>Oats, dry</td><td class="w">70 g</td></tr>
+      <tr><td>Magerquark</td><td class="w">200 g</td></tr>
+      <tr><td>Banana, peeled</td><td class="w">120 g</td></tr>
+      <tr><td>Eggs, whole</td><td class="w">110 g · 2</td></tr>
+      <tr><td>Almonds</td><td class="w">25 g</td></tr>
+    </table>
+    <div class="tot"><span class="k">820 kcal</span><span class="m">57 P · 28 F · 89 C</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Lunch</h2>
+    <table>
+      <tr><th>Food</th><th>Raw / dry</th></tr>
+      <tr><td>Chicken breast</td><td class="w">200 g</td></tr>
+      <tr><td>White rice</td><td class="w">75 g</td></tr>
+      <tr><td>Broccoli</td><td class="w">200 g</td></tr>
+      <tr><td>Olive oil</td><td class="w">10 g</td></tr>
+    </table>
+    <div class="tot"><span class="k">654 kcal</span><span class="m">56 P · 15 F · 73 C</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Dinner · same as lunch</h2>
+    <table>
+      <tr><th>Food</th><th>Raw / dry</th></tr>
+      <tr><td>Chicken breast</td><td class="w">200 g</td></tr>
+      <tr><td>White rice</td><td class="w">75 g</td></tr>
+      <tr><td>Broccoli</td><td class="w">200 g</td></tr>
+      <tr><td>Olive oil</td><td class="w">10 g</td></tr>
+    </table>
+    <div class="tot"><span class="k">654 kcal</span><span class="m">56 P · 15 F · 73 C</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Cheat days · the arithmetic</h2>
+    <p>Your week runs a <b>2,800 kcal deficit</b>. That is the whole budget, and a cheat day spends from it.</p>
+    <table>
+      <tr><th>What you do</th><th>Weekly loss</th></tr>
+      <tr><td>Nothing, 7 strict days</td><td class="w">0.37 kg</td></tr>
+      <tr><td>One day at maintenance (~2,530)</td><td class="w">0.31 kg</td></tr>
+      <tr><td>One relaxed day (~3,030)</td><td class="w">0.25 kg</td></tr>
+      <tr><td>One proper blowout (~4,000)</td><td class="w">0.12 kg</td></tr>
+      <tr><td>Two blowouts</td><td class="w" style="color:var(--pr)">0.00 kg</td></tr>
+    </table>
+    <p style="margin-top:10px"><b>One is nearly free. Two unrestricted ones erase the week.</b> The issue is never the idea, it is that an unplanned cheat day lands 1,500 to 3,000 kcal over, not 400.</p>
+    <h3>Bank it instead</h3>
+    <p>Drop the rice from <b>75 g to 60 g</b> at both meals, Sunday to Friday. That saves 184 kcal a day and banks <b>1,104 kcal</b> by Saturday.</p>
+    <div class="tot"><span class="k">3,232 kcal</span><span class="m">Saturday allowance</span></div>
+    <p style="margin-top:10px">Same weekly total, same 0.37 kg, and that is a real restaurant meal with drinks and dessert rather than a joyless one. You paid for it in advance.</p>
+    <div class="warn"><b>The scale will jump 1 to 2 kg the next morning.</b> That is glycogen and the water bound to it, not fat. You cannot gain 2 kg of fat from one meal, it would take about 15,000 surplus calories. Ignore it, keep weighing daily, and look at the weekly average.</div>
+    <p class="meta" style="margin-top:9px">Alcohol is the quiet one. Drinks carry calories you will not think to count, and they tend to arrive alongside the food rather than instead of it.</p>
+  </div>
+
+  <div class="card">
+    <h2>Day</h2>
+    <div class="tot day"><span class="k">2,128 kcal</span><span class="m">169 P · 59 F · 235 C</span></div>
+    <p style="margin-top:12px"><b>Every weight is raw or dry.</b> Rice roughly triples cooked and chicken loses about a quarter. A cooked-weight mistake is worth hundreds of calories a day.</p>
+    <p><b>The dial is the rice.</b> Weigh yourself daily, look once every three weeks. Losing slower than 0.37 kg a week, drop to 60 g. Faster, go to 90 g. Change nothing else.</p>
+  </div>
+</section>
+
+<!-- ================= COOK ================= -->
+<section id="cook">
+  <div class="card">
+    <h2>Sunday batch · 40 min</h2>
+    <p>Do this once and the week cooks itself.</p>
+    <ul>
+      <li><b>Chicken.</b> 6 portions of 200 g on a tray, oven 200&deg;C fan, 20 to 22 min. Season dry before it goes in. Cool, fridge, use within 3 days and freeze the rest.</li>
+      <li><b>Oats.</b> 3 or 4 jars: 70 g oats + 200 g Magerquark + a good splash of milk or water in each. Stir, lid on, fridge.</li>
+      <li><b>Eggs.</b> Boil 6 at once. 7 min for jammy, 9 for firm. Straight into cold water, then fridge in the shell.</li>
+      <li><b>Not the rice.</b> See the warning below.</li>
+    </ul>
+    <div class="warn"><b>Rice is the one thing you do not batch casually.</b> The <i>Bacillus cereus</i> toxin is heat resistant, so reheating does not rescue rice that sat out. Cook it fresh daily, or cool it in a shallow tray within 90 minutes, fridge below 5&deg;C, and reheat once only.</div>
+  </div>
+
+  <div class="card">
+    <h2>Breakfast · 2 min</h2>
+    <p>Take a jar out of the fridge. Slice in <b>120 g of banana</b>, scatter <b>25 g of almonds</b> on top, and eat it with <b>2 boiled eggs</b> on the side.</p>
+    <p>If the Magerquark has gone stiff overnight, stir in a splash of water. It is quark, not yogurt, so it sets firmer than you expect.</p>
+  </div>
+
+  <div class="card">
+    <h2>Lunch &amp; dinner · 10 min</h2>
+    <ul>
+      <li><b>Rice.</b> 75 g dry with 150 ml water, lid on, 10 min simmer then 5 min off the heat. Or a rice cooker, which is the lazy answer.</li>
+      <li><b>Broccoli.</b> 200 g from frozen, microwave 4 to 5 min with a splash of water. No defrosting, no chopping.</li>
+      <li><b>Chicken.</b> Already cooked. 40 seconds in the microwave, or eat it cold, which is faster and perfectly fine.</li>
+      <li><b>Oil last.</b> Drizzle the weighed 10 g over the finished plate.</li>
+    </ul>
+    <div class="warn"><b>Do not fry in the 10 g of oil.</b> A good chunk stays in the pan, so you eat maybe 6 g and count 10. Cook the chicken dry, then add the oil to the plate. Same number on paper, but this way you actually get the fat the plan depends on.</div>
+  </div>
+
+  <div class="card">
+    <h2>Flavour · five rotations</h2>
+    <p>All of these are effectively free. Mix into the rice or over the chicken.</p>
+    <ul>
+      <li><b>Soy &amp; ginger.</b> Soy sauce, grated garlic, grated ginger, chilli flakes.</li>
+      <li><b>Lemon &amp; herb.</b> Lemon juice, black pepper, dried oregano, garlic powder.</li>
+      <li><b>Smoky.</b> Smoked paprika, cumin, garlic powder, a little salt.</li>
+      <li><b>Mustard &amp; dill.</b> Dijon, white wine vinegar, dried dill. Good cold.</li>
+      <li><b>Curry.</b> Curry powder bloomed in the hot rice, with a spoon of the broccoli water to loosen it.</li>
+    </ul>
+    <p class="meta">Creamy sauces, shop-bought marinades and oil-based dressings are where a carefully weighed diet quietly falls apart. If you cannot weigh it, assume it is more than you think.</p>
+  </div>
+
+  <div class="card">
+    <h2>Making it better</h2>
+    <ul>
+      <li><b>Broccoli is nearly free</b> at 34 kcal per 100 g. Doubling to 400 g costs 68 kcal. When a day feels hard, more vegetables is almost always the cheapest answer.</li>
+      <li><b>Rotate the vegetable</b> a few times a week. One vegetable daily is one narrow slice of micronutrients. Peppers, carrots, spinach.</li>
+      <li><b>Fibre is the weak spot.</b> White rice has 1.3 g per 100 g. Swapping part of it for brown rice, or adding a tin of lentils, fixes it and adds protein.</li>
+      <li><b>Your supplements cover the fish.</b> Check the <b>EPA + DHA</b> figure on the tub, not the total oil. A 1000 mg capsule usually contains a fraction of that as the thing you actually want.</li>
+    </ul>
+    <p class="meta" style="margin-top:4px">General guidance, not medical or dietary advice.</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b?'true':'false'));
+    document.querySelectorAll('section').forEach(s=>s.classList.toggle('on', s.id===b.dataset.s));
+    window.scrollTo(0,0);
+  };
+});
+
+/* ---------- shopping list ----------
+   Grouped the way the shop is laid out, so it is one lap and not four. */
+const LIST=[
+  ['Meat',   [['Chicken breast, plain','2.8 kg · 6 × 500 g']]],
+  ['Dairy',  [['Magerquark','3 × 500 g'],['Eggs','1 × 20']]],
+  ['Frozen', [['Broccoli','3 × 1 kg']]],
+  ['Produce',[['Bananas','~11 · 1.3 kg']]],
+  ['Dry',    [['Oats','1 × 500 g'],['Rice','1 × 1 kg'],['Almonds','1 × 200 g']]],
+  ['Oil',    [['Olive oil','500 ml · every 3–4 wks']]],
+];
+const KEY='ironlog-shop-v1';
+let ticked={};
+try{ ticked=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(ticked)); }catch(e){} };
+
+function render(){
+  const el=document.getElementById('list'); let h='';
+  LIST.forEach(([group,rows])=>{
+    h+=`<h3>${group}</h3>`;
+    rows.forEach(([name,qty])=>{
+      const on=!!ticked[name];
+      h+=`<div class="item${on?' done':''}" data-k="${name}">
+            <div class="box">✓</div><div class="nm">${name}</div><div class="qty">${qty}</div>
+          </div>`;
+    });
+  });
+  el.innerHTML=h;
+  el.querySelectorAll('.item').forEach(it=>{
+    it.onclick=()=>{ const k=it.dataset.k; ticked[k]=!ticked[k]; save(); render(); };
+  });
+  const total=LIST.reduce((t,[,r])=>t+r.length,0);
+  const done=Object.values(ticked).filter(Boolean).length;
+  document.getElementById('prog').textContent=`${done} of ${total} in the trolley`;
+}
+document.getElementById('reset').onclick=()=>{ ticked={}; save(); render(); };
+render();
+</script>
+</body>
+</html>
