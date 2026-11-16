@@ -195,7 +195,7 @@
   <div class="wrap">
     <div class="brand">
       <h1>IRON<b>LOG</b></h1>
-      <div class="tag">4-Day Upper/Lower · <b>Strength + Cut</b></div>
+      <div class="tag">4 Lifts + Conditioning · <b>Hybrid Cut</b></div>
     </div>
     <div class="views" role="tablist">
       <button role="tab" aria-selected="true" data-view="today">Today</button>
@@ -244,8 +244,8 @@
 /* ---------- The Plan ---------- */
 const KG_INC={heavy:5, mid:2.5, iso:2.5};
 const PLAN={
-  lowera:{ title:"Lower A", focus:"Quads · Hamstrings · Calves",
-    cardio:"Finish with 10 min easy incline walk. Nothing that eats into tomorrow.",
+  lowera:{ title:"Lower A", focus:"Quads · Hamstrings · Calves", wd:"Mon",
+    cardio:"<b>Mon PM, at least 3 h after this session.</b> Incline walk: <b>5.0 km/h at 11%, 45 min</b>. ~415 kcal. Hands off the rails.",
     ex:[
       {id:"legpress",name:"Leg Press",              sets:4, reps:6, type:"strength", inc:KG_INC.heavy,
         cue:"The heaviest thing you do all week. Drive out fast, control the way down, no bouncing. Backup: hack squat."},
@@ -258,8 +258,8 @@ const PLAN={
       {id:"legraise",name:"Hanging Leg Raise",      sets:3, reps:12,type:"build",    inc:0,
         cue:"No swinging. Knees bent if straight legs are too much."},
     ]},
-  uppera:{ title:"Upper A", focus:"Press bias · Chest · Shoulders · Triceps",
-    cardio:"Optional: 15 min Zone 2 on the bike or rower. Conversational pace.",
+  uppera:{ title:"Upper A", focus:"Press bias · Chest · Shoulders · Triceps", wd:"Wed",
+    cardio:"<b>Wed PM — one of your two hard sessions.</b> Rower or bike, not the treadmill. 10 min easy, then <b>5 × 4 min hard / 3 min easy</b>, 5 min down. ~47 min, ~436 kcal. By minute three of each interval you should not be able to hold a sentence.",
     ex:[
       {id:"chestpress",name:"Chest Press",         sets:4, reps:6, type:"strength", inc:KG_INC.mid,
         cue:"Handles at mid-chest. Full stretch back, drive to lockout. Backup: barbell bench."},
@@ -274,8 +274,8 @@ const PLAN={
       {id:"facepull",name:"Face Pull",             sets:3, reps:15,type:"build",    inc:KG_INC.iso,
         cue:"Shoulder health. High elbows, pull towards the forehead."},
     ]},
-  lowerb:{ title:"Lower B", focus:"Posterior chain · Glutes · Core",
-    cardio:"Optional finisher: 8 min of 15s hard / 45s easy on the air bike. After the lifting, never before.",
+  lowerb:{ title:"Lower B", focus:"Posterior chain · Glutes · Core", wd:"Fri",
+    cardio:"<b>Fri PM, at least 3 h after this session.</b> Incline walk: <b>5.0 km/h at 11%, 45 min</b>. ~415 kcal. Same setting as Monday.",
     ex:[
       {id:"hacksq", name:"Hack Squat",              sets:4, reps:8, type:"strength", inc:KG_INC.mid,
         cue:"Deeper than feels natural, controlled throughout. Backup: single-leg leg press, 8 per leg."},
@@ -288,8 +288,8 @@ const PLAN={
       {id:"cablecrunch",name:"Cable Crunch",        sets:3, reps:15,type:"build",    inc:KG_INC.iso,
         cue:"Crunch with the abs, not by pulling with the arms."},
     ]},
-  upperb:{ title:"Upper B", focus:"Pull bias · Back · Arms · Anti-rotation",
-    cardio:"Nothing. Tomorrow is a rest day, let it actually be one.",
+  upperb:{ title:"Upper B", focus:"Pull bias · Back · Arms · Anti-rotation", wd:"Sat",
+    cardio:"<b>Sat PM — your second hard session.</b> 5 rounds, continuous, moderate loads: row 400 m, farmer carry 40 m, 20 step-ups to knee height, 2 min incline walk at 12%. ~35 min, ~319 kcal. Nothing lateral, nothing wide-stance while that groin is recent.",
     ex:[
       {id:"incdb",  name:"Incline Chest Press",    sets:4, reps:8, type:"strength", inc:KG_INC.mid,
         cue:"The heavy anchor for this day. Upper chest, full stretch. Machine or dumbbells, whichever is free, but pick one and stay with it."},
@@ -306,6 +306,18 @@ const PLAN={
     ]},
 };
 const DAY_ORDER=["lowera","uppera","lowerb","upperb"];
+/* The three non-lifting days. Conditioning only, so nothing here is loggable:
+   it is a prescription card, not a set sheet. Kept OUT of DAY_ORDER on purpose
+   so every invariant that iterates lifting days stays true. */
+const OFF={ title:"Off Days", focus:"Tue · Thu · Sun · conditioning only",
+  items:[
+    {wd:"Tue", n:"Incline walk",        set:"5.0 km/h · 11% · 45 min", k:"~415 kcal", tone:"Steady",
+      cue:"Same setting as Monday. Stand tall, let your arms swing, keep your hands off the rails. A light upright hand is fine; leaning back on them costs you about a third of the session."},
+    {wd:"Thu", n:"Stair machine + walk", set:"50 min stairs, then 40 min at 5.0 km/h · 6%", k:"~778 kcal", tone:"Steady",
+      cue:"The biggest day of the week and the easiest one to skip. Split it morning and evening if that helps. If the stair machine is taken, 50 min of incline walk at 12% is the same work. Steady, not hard: this is a long grind, not a session you push."},
+    {wd:"Sun", n:"Long easy walk",       set:"120 min outdoors, flat, conversational", k:"~505 kcal", tone:"Easy",
+      cue:"Outdoors on purpose, and the one session in the week that should not feel like training. If you can't hold a conversation, you are going too hard."},
+  ]};
 const exById={}; DAY_ORDER.forEach(d=>PLAN[d].ex.forEach(e=>exById[e.id]=e));
 const REST={ legpress:180,seatedcurl:90,bulgarian:120,calf1:60,legraise:60,
   chestpress:180,pulldown:150,shpress:150,cablerow:120,pushdn:60,facepull:45,
@@ -368,9 +380,9 @@ const daybody=document.getElementById("daybody");
 
 function renderDays(){
   const el=document.getElementById("days"); el.innerHTML="";
-  DAY_ORDER.forEach(d=>{
+  DAY_ORDER.concat("off").forEach(d=>{
     const b=document.createElement("button");
-    b.className="day-pill"; b.textContent=PLAN[d].title;
+    b.className="day-pill"; b.textContent = d==="off" ? OFF.title : PLAN[d].title;
     b.setAttribute("role","tab");
     b.setAttribute("aria-selected", d===currentDay?"true":"false");
     b.onclick=()=>{ currentDay=d; renderDays(); renderDay(); };
@@ -378,7 +390,28 @@ function renderDays(){
   });
 }
 
+function renderOff(){
+  let h=`<div class="dayhead">
+      <div><div class="t">${OFF.title}</div><div class="f">${OFF.focus}</div></div>
+      <div class="vol">Week adds<b>469/day</b></div>
+    </div>`;
+  h+=`<div class="cardio-note"><div><span class="k">Why these exist</span><br>Four lifting days do not make you lean; they stop you losing muscle while something else does. These three are the something else, and they are low intensity on purpose. <b>87% of your conditioning minutes are easy.</b> Only the Wednesday and Saturday sessions are meant to hurt.</div></div>`;
+  OFF.items.forEach(it=>{
+    h+=`<div class="ex" data-card="off-${it.wd.toLowerCase()}">
+      <div class="ex-top">
+        <div><div class="ex-name">${it.wd} &nbsp;·&nbsp; ${it.n}</div><div class="ex-cue">${it.cue}</div></div>
+        <div class="ex-target"><div class="ex-scheme">${it.k}</div>
+          <span class="badge build">${it.tone}</span></div>
+      </div>
+      <div class="colhead" style="grid-template-columns:1fr"><span>${it.set}</span></div>
+    </div>`;
+  });
+  daybody.innerHTML=h;
+  updateVolume();
+}
+
 function renderDay(){
+  if(currentDay==="off"){ renderOff(); return; }
   const p=PLAN[currentDay];
   let h=`<div class="dayhead">
       <div><div class="t">${p.title} Day</div><div class="f">${p.focus}</div></div>
@@ -445,6 +478,7 @@ function onInput(e){
 }
 
 function collectDay(){
+  if(currentDay==="off") return null;        /* conditioning days log nothing */
   const out={}; let anySet=false;
   PLAN[currentDay].ex.forEach(ex=>{
     const sets=[];
@@ -541,16 +575,18 @@ function renderGuide(){
     <div class="g">
       <h3><span class="ico">◆</span> Your Week</h3>
       <div class="sched">
-        <div class="d">Mon</div><div class="w">Lower A</div>
-        <div class="d">Tue</div><div class="w">Upper A</div>
-        <div class="d">Wed</div><div class="w rest">Off. Walk, ride, nothing structured</div>
-        <div class="d">Thu</div><div class="w">Lower B</div>
-        <div class="d">Fri</div><div class="w">Upper B</div>
-        <div class="d">Sat</div><div class="w rest">Off</div>
-        <div class="d">Sun</div><div class="w rest">Off</div>
+        <div class="d">Mon</div><div class="w">Lower A &nbsp;·&nbsp; PM incline walk 45</div>
+        <div class="d">Tue</div><div class="w rest">Incline walk 45</div>
+        <div class="d">Wed</div><div class="w">Upper A &nbsp;·&nbsp; PM <b>hard</b> erg intervals</div>
+        <div class="d">Thu</div><div class="w rest">Stair machine 50 + walk 40</div>
+        <div class="d">Fri</div><div class="w">Lower B &nbsp;·&nbsp; PM incline walk 45</div>
+        <div class="d">Sat</div><div class="w">Upper B &nbsp;·&nbsp; PM <b>hard</b> mixed circuit</div>
+        <div class="d">Sun</div><div class="w rest">Easy outdoor walk 120</div>
       </div>
       <p style="margin-top:10px">Upper/lower, twice through. <b>Every muscle gets trained twice a week</b>, and that frequency is the single most important structural choice when you are eating in a deficit. Hitting something once a week is enough to grow it when you are well fed. It is not enough to hold on to it when you are not.</p>
-      <p style="margin-top:9px">Two on, one off, two on, two off. If life moves a day, keep the <b>lower / upper / lower / upper</b> order and never put the two lower days back to back.</p>
+      <p style="margin-top:9px"><b>Both hard conditioning sessions sit on upper days.</b> That is deliberate. Your legs get Monday and Friday from the bar and Wednesday and Saturday from the conditioning, with an easy day between every one of them. Never put the two lower days back to back, and never move a hard conditioning session onto the day before a lower day.</p>
+      <p style="margin-top:9px"><b>Lift in the morning, condition in the evening.</b> The one moderator that showed up clearly in the concurrent-training meta-analysis was proximity: interference with explosive strength was significant when both happened in the same session within 20 min, and not significant once they were at least 3 h apart. If it has to be one session, conditioning goes after the lifting.</p>
+      <p style="margin-top:9px">That is <b>11.1 hours a week</b> including the four lifts, and <b>87% of the conditioning minutes are at low intensity</b>. Only 55 minutes of the week are genuinely hard.</p>
     </div>
     <div class="g">
       <h3><span class="ico">◆</span> Your groin</h3>
@@ -569,7 +605,8 @@ function renderGuide(){
     <div class="g">
       <h3><span class="ico">◆</span> The goal, and the honest trade-off</h3>
       <p>Twelve weeks, from 74.3 kg, getting stronger and leaner at the same time. That is possible. What is not possible is doing either of them <b>maximally</b>, and most plans that promise both quietly fail at one.</p>
-      <p><b>The target is 0.37 kg a week</b>, which is 0.5% of your bodyweight. Over 12 weeks that is about <b>4.5 kg</b>, putting you near 69.8 kg. That rate is deliberately unexciting. Go faster and you start paying for it in strength, training quality and sleep, and most of what comes off quickly comes back.</p>
+      <p><b>The target is 0.59 kg a week</b>, which is 0.8% of your bodyweight. Over 12 weeks that is about <b>7.1 kg</b>, putting you near 67.2 kg. That sits inside the 0.5 to 1.0% a week range the evidence supports, toward the upper half of it. Go faster and you start paying for it in strength, training quality and sleep, and most of what comes off quickly comes back.</p>
+      <p><b>Where the rate comes from changed, and that is the important part.</b> It used to be 0.37 kg a week from eating 2,100. It is now 0.59 kg a week from eating <b>2,315</b> and moving a great deal more. You are eating more than you were and losing faster, because the conditioning week widened the gap from the other side. That is the whole reason the schedule looks the way it does.</p>
       <p><b>Expect the strength numbers to keep climbing, just slower.</b> Most of what you gain in a deficit is neural rather than new muscle: better recruitment, better technique, more confidence under load. That is real strength and it shows on the machine stack. It just will not come with much size.</p>
       <p><b>The lifting has one job in a deficit: tell your body to keep the muscle.</b> That instruction is written in load, not in sweat. Which is why the plan keeps four heavy strength lifts at 6 to 8 reps and does not turn into circuits, supersets and burnouts the moment fat loss gets mentioned. Chasing a sweat in the weights room is how people arrive at week 12 lighter, weaker and softer.</p>
       <p>Cardio is a small lever here and the plan treats it like one. <b>The deficit does the fat loss.</b> Conditioning is for your heart, your recovery and a few extra calories, and it is deliberately optional and short so it never competes with the lifting.</p>
@@ -614,29 +651,42 @@ function renderGuide(){
       <p style="margin-top:9px">The clock is anchored to real time, so locking the phone, switching apps or even relaunching IRONLOG will not throw it off. Leave the app and iOS freezes it, alarm included; come back and it either shows the true time left or sounds straight away and tells you how long ago it finished.</p>
     </div>
     <div class="g">
-      <h3><span class="ico">◆</span> Cardio, steps &amp; your bike commute</h3>
-      <p><b>Be clear about what cardio is for here.</b> It is not the thing that makes you lean. The deficit is. Cardio buys you a few hundred calories, a better engine and faster recovery between sessions, and that is worth having. It is not worth trading training quality for.</p>
-      <p>Your ~2.5 km each way commute is roughly <b>5 km, or 15 to 20 min of easy riding</b>, on every gym day. Across four gym days that is 60 to 80 min of low-intensity work a week that you are already doing and do not need to think about.</p>
+      <h3><span class="ico">◆</span> Conditioning: the settings</h3>
+      <p><b>Incline walk is 5.0 km/h at 11% for 45 min.</b> That is 8.1 MET and about <b>415 net kcal</b>. You cover 3.75 km, which is not far and is not meant to be. The work is the hill, not the distance.</p>
+      <p style="margin-top:9px">If 11% does not suit your knees or your groin, these are the same work. Slower and steeper is kinder to the knees and harder on the calves; faster and shallower is the reverse. With a recent adductor strain, start slow and steep, because a shorter stride loads the groin less.</p>
+      <div class="sched" style="grid-template-columns:auto 1fr">
+        <div class="d">4.5 / 13%</div><div class="w">8.2 MET &nbsp;·&nbsp; 419 kcal in 45 min</div>
+        <div class="d">5.0 / 11%</div><div class="w"><b>Your default.</b> 8.1 MET &nbsp;·&nbsp; 415 kcal in 45 min</div>
+        <div class="d">5.5 / 9%</div><div class="w">7.9 MET &nbsp;·&nbsp; 401 kcal in 45 min</div>
+        <div class="d">6.0 / 8%</div><div class="w">8.0 MET &nbsp;·&nbsp; 408 kcal in 45 min</div>
+      </div>
+      <p style="margin-top:10px">Short on time? <b>5.0 km/h at 15% for 35 min</b> lands in the same place.</p>
+      <p style="margin-top:9px"><b>The handrails.</b> The usual advice is never touch them, and the actual evidence is more specific. At a 10% incline, holding the rails while standing upright measured about 12% lower than unsupported and that reduction was <i>not</i> statistically significant. Holding them and <b>leaning back</b> measured about 32% lower, and that one was. A light upright hand costs you very little. If your arms are straight and your hips are behind your heels, you are not doing an 11% incline any more, you are doing about a 7% one and paying 45 minutes for it.</p>
+      <p style="margin-top:9px"><b>Why walking is the backbone of this.</b> Metabolic intensity and recovery cost are different axes. An 11% incline is metabolically moderate, around 63% of VO2max, but mechanically it is nearly free: no eccentric loading, no muscle damage, nothing that shows up on the bar the next day. A vigorous circuit rates the same 8.0 MET as that walk and burns the same calories per minute, but you can do 45 min of the walk every day and you cannot do that with circuits, ever. <b>Hybrid work is not a more efficient way to burn. It is better training, which is a different and perfectly good reason to do it.</b></p>
+      <p style="margin-top:9px"><b>Ignore the treadmill's calorie display.</b> It shows gross calories, may not know your weight, and has no idea whether you are hanging off the rails. Plan from the numbers above and let the scale settle it.</p>
       <ul>
-        <li><b>Two optional finishers</b> are built in: a 10 min incline walk after Lower A, and 8 min of 15s hard / 45s easy on the air bike after Lower B. Both are short on purpose. Both are after the lifting.</li>
-        <li><b>Steps</b> are the quietly effective lever, because they cost you no recovery at all. Use ~7 to 8k as a floor and aim higher on your three off days.</li>
-        <li><b>Do not add more cardio when the scale stalls.</b> Check the food first. Adding sessions is how a deficit turns into exhaustion and a stalled bench at the same time.</li>
+        <li><b>Your ~2.5 km each way commute is already inside your maintenance estimate.</b> Do not count it twice. Everything above is new work on top.</li>
+        <li><b>Ramp in over four weeks.</b> One hard session a week for the first fortnight, both from week three, and add low-intensity minutes 15 at a time. What breaks first is never motivation, it is a tendon in week five.</li>
+        <li><b>You are at six training days.</b> The studies where conditioning started costing people jump performance sat at six to ten sessions a week. You are at the bottom edge of that, which is a reason to hold the line rather than add more.</li>
+        <li><b>Do not add conditioning when the scale stalls.</b> Check the food first. Adding sessions is how a deficit turns into exhaustion and a stalled bench at the same time.</li>
       </ul>
     </div>
     <div class="g">
       <h3><span class="ico">◆</span> Eating: the actual numbers</h3>
       <p>Everything below is calculated off <b>74.3 kg</b>. Redo it if your weight moves more than a couple of kilos.</p>
       <div class="sched" style="grid-template-columns:auto 1fr">
-        <div class="d">Rate</div><div class="w"><b>0.37 kg a week.</b> 0.5% of bodyweight. About 4.5 kg over 12 weeks, landing near 69.8 kg.</div>
-        <div class="d">Deficit</div><div class="w"><b>About 400 kcal a day</b> below maintenance. Comes from 0.37 kg at roughly 7,700 kcal per kg of fat.</div>
-        <div class="d">Protein</div><div class="w"><b>~150 g a day</b>, which is 2 g per kg. This is the number that protects your strength.</div>
-        <div class="d">Carbs</div><div class="w">Put the bulk of them around training. They fuel the heavy sets, which is where the muscle-sparing signal comes from.</div>
+        <div class="d">Rate</div><div class="w"><b>0.59 kg a week.</b> 0.8% of bodyweight. About 7.1 kg over 12 weeks, landing near 67.2 kg.</div>
+        <div class="d">Deficit</div><div class="w"><b>About 654 kcal a day</b> below maintenance. Comes from 0.59 kg at roughly 7,700 kcal per kg of fat.</div>
+        <div class="d">Protein</div><div class="w"><b>At least 150 g a day</b>, which is 2 g per kg. The food plan delivers ~180 g. This is the number that protects your strength.</div>
+        <div class="d">Carbs</div><div class="w">Put the bulk of them around training. They fuel the heavy sets and now the conditioning too, which is where the muscle-sparing signal comes from.</div>
       </div>
-      <p style="margin-top:10px"><b>The estimate, now that height is in.</b> At 175 cm and 74.3 kg, Mifflin-St Jeor puts your resting burn near 1,650 to 1,720 kcal depending on your age. With four lifting days, the commute and your steps, maintenance lands roughly <b>2,400 to 2,600</b>, which makes your eating target about <b>2,100 kcal a day</b>.</p>
-      <p><b>Treat that as a starting line, not a number.</b> The formula carries an error band of roughly 10%, which is about 250 kcal here, and that is wider than the 400 kcal deficit it is meant to create. So the calculator can be wrong by more than the entire thing you are trying to do.</p>
-      <p><b>Which is why the scale is the real instrument.</b> Eat 2,100 for three weeks, weigh daily, compare the weekly averages. If you are losing faster than 0.37 kg a week, eat more. Slower, eat less. Alternatively, log what you normally eat for 10 to 14 days at stable weight and use that average as your true maintenance.</p>
-      <p>For context: you are BMI 24.3 now and 22.8 at 69.8 kg. Both sit inside the healthy range, so this is a modest cut, not a crash.</p>
-      <p><b>Then adjust from the scale, not the maths.</b> The 7,700 kcal per kg figure is a rule of thumb and it consistently overestimates real-world loss, because your body adapts as you get lighter. After three weeks, compare your actual weekly average against 0.37 kg and move the calories, not the goalposts. Weigh daily, judge weekly averages, ignore any single morning.</p>
+      <p style="margin-top:10px"><b>Where the deficit comes from matters.</b> Almost none of it comes from eating less. At 175 cm and 74.3 kg, Mifflin-St Jeor puts your resting burn near 1,650 to 1,720 kcal. With four lifting days, the commute and your steps, maintenance was roughly <b>2,400 to 2,600</b>. The conditioning week adds about <b>469 kcal a day</b> on top, so your burn is now near <b>2,970</b>, which makes your eating target about <b>2,315 kcal a day</b>.</p>
+      <p><b>So being more active is how you get to eat more, not less.</b> That is the whole trick, and it is worth being explicit about it. If you added the conditioning and kept eating 2,132, you would be running an 837 kcal deficit at 1.02% of bodyweight a week, which is past the top of the range the evidence supports and straight into the territory where upper-body strength gains get cut in half. Eat the 2,315.</p>
+      <p><b>Treat that as a starting line, not a number.</b> The Mifflin estimate carries an error band of roughly 10%, about 250 kcal here, and the conditioning figures stack their own uncertainty on top of that. The band is now <i>wider</i> than it was, not narrower, and it is wider than the 654 kcal deficit it is meant to create.</p>
+      <p><b>Which is why the scale is the real instrument.</b> Eat 2,315 for three weeks, weigh daily, compare the weekly averages. If you are losing faster than 0.59 kg a week, eat more. Slower, eat less. Alternatively, log what you normally eat for 10 to 14 days at stable weight and use that average as your true maintenance.</p>
+      <p><b>If the hard sessions start feeling flat around week four, eat more, do not train less.</b> Drop to 0.6% a week and eat about <b>2,480</b>. In a six-day week recovery is the binding constraint, and under-eating is the single most common way these programmes fall apart.</p>
+      <p>For context: you are BMI 24.3 now and 21.9 at 67.2 kg. Both sit inside the healthy range.</p>
+      <p><b>Then adjust from the scale, not the maths.</b> The 7,700 kcal per kg figure is a rule of thumb and it consistently overestimates real-world loss, because your body adapts as you get lighter. After three weeks, compare your actual weekly average against 0.59 kg and move the calories, not the goalposts. Weigh daily, judge weekly averages, ignore any single morning.</p>
       <p><b>On the protein number, two things worth knowing.</b> The commonly quoted figure for lean lifters in a deficit is 2.3 to 3.1 g per kg of <i>fat-free mass</i>, which would put you near 150 to 190 g. But that recommendation is genuinely disputed: one well-argued reading of the same literature finds no relationship between protein intake and body composition outcomes at all, and puts the useful number closer to 1.8 g/kg. The one thing both sides agree on is that <b>anywhere between about 1.8 and 2.7 g/kg makes no meaningful difference</b>. For you that is 134 g to 201 g. So 150 g is a sensible, easy target, and there is no prize for chasing the top of the range.</p>
       <ul>
         <li><b>Sleep 7 to 9 hours.</b> In a deficit this stops being general advice and starts being the thing that decides whether you hold your strength.</li>
